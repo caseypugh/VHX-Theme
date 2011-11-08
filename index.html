@@ -1,8 +1,17 @@
-CTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--
 
+ __   __  __  __    __  __
+/\ \ | | /\ \_\ \  /\_\_\_\
+\ \ \' | \ \  __ \ \/_/\_\/_
+ \ \__|   \ \_\ \_\  /\_\/\_\
+  \/_/     \/_/\/_/  \/_/\/_/
+A video-based theme for Tumblr
+
+-->
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-    
+
     <!-- DEFAULT VARIABLES -->
     <meta name="color:Background" content="#333333" />
     <meta name="color:Background Fade" content="#111111" />
@@ -35,16 +44,16 @@ CTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR
    <script type="text/javascript" src="http://vhx.tv/javascripts/jquery.swfobject-1.1.1.js"></script>
 
    <script type="text/javascript">
-     
+
      //
      // Api docs: http://dev.vhx.tv/video-player.html
      //
-     
+
      $(document).ready(
        function() {
-           
+
          $(window).resize(redraw);
-         
+
          $('#vhx_megaplaya').flash({
            swf: 'http://vhx.tv/embed/megaplaya.swf',
            width: '100%',
@@ -69,7 +78,7 @@ CTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR
        load_videos();
        redraw();
      }
-     
+
      function redraw()
      {
          $('.bar').height($('#info').outerHeight() + 10);
@@ -97,7 +106,7 @@ CTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR
      function megaplaya_callback(event_name, args)
      {
        switch (event_name) {
-       
+
         case 'onVideoLoad':
             load_video_info();
             break;
@@ -108,10 +117,10 @@ CTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR
      {
         var post_id = (/post\/([0-9]+)/).exec(location.href);
         var url = "http://api.tumblr.com/v2/blog/cputv.tumblr.com/posts/video?api_key=zKa7HBvefLe0PcxMoojhQX4l0JcUSwa1sSAPGBvwh6VGVlxa3j&jsonp=load_videos_complete";
-        
+
         if (post_id)
             url += '&id=' + post_id[1];
-            
+
        $.ajax({
          type: "GET",
          url: url,
@@ -121,10 +130,10 @@ CTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR
 
      var videos = [];
      function load_videos_complete(obj) {
-        
+
         for (var i = 0; i < obj.response.posts.length; i++) {
 
-            videos.push({ 
+            videos.push({
                 url: obj.response.posts[i].permalink_url,
                 post: obj.response.posts[i]
             });
@@ -132,18 +141,18 @@ CTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR
 
        megaplaya.api_playQueue(videos);
     }
-    
+
     function load_video_info()
     {
         var video = megaplaya.api_getCurrentVideo();
-       
+
         var caption = video.post.caption.replace('<p>','').replace('</p>','');
         // Todo: Use an html stripper
         if (caption != "")
             $('#video_caption')[0].innerHTML = caption;
-        else 
+        else
             $('#video_caption')[0].innerHTML = "";
-        
+
         $.ajax({
          type: "GET",
          url: "http://api.vhx.tv/videos/info.json?callback=test&url="+video.url,
@@ -155,13 +164,13 @@ CTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR
             redraw();
          }
         });
-        
+
         $('iframe')[0].src = "http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fcputv.tumblr.com%2Fpost%2F" + video.post.id + "&name=cputv&pid=" + video.post.id + "&rk=" + video.post.reblog_key;
-        
+
         redraw();
-        
+
     }
-    
+
    </script>
    <style>
    body,html { margin: 0; padding: 0; background: #000; overflow: hidden; }
@@ -179,7 +188,7 @@ background: -ms-linear-gradient(top,  {Color:Background} 0%,{Color:Background Fa
 background: linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* W3C */
 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='{Color:Background}', endColorstr='{Color:Background Fade}',GradientType=0 ); /* IE6-9 */
 
-     min-height: 50px; 
+     min-height: 50px;
     }
 
     .bar .name { text-align: center; }
