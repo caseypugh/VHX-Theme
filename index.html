@@ -1,0 +1,215 @@
+CTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    
+    <!-- DEFAULT VARIABLES -->
+    <meta name="color:Background" content="#333333" />
+    <meta name="color:Background Fade" content="#111111" />
+    <meta name="color:Title" content="#2ef4ed" />
+    <meta name="color:Text" content="#ffffff" />
+    <meta name="color:Text Alt" content="#aaaaaa" />
+
+    <meta name="font:Title" content="Arial" />
+    <meta name="font:Body" content="Arial" />
+    <meta name="font:Accent" content="Lucida Sans" />
+
+    <meta name="if:Show People I Follow" content="1" />
+    <meta name="if:Show Tags" content="1" />
+    <meta name="if:Show Album Art on Audio Posts" content="1" />
+    <meta name="if:Enable Jump Pagination" content="0" />
+
+    <meta name="text:Disqus Shortname" content="" />
+
+    <meta name="image:Header" content="" />
+    <meta name="image:Background" content="" />
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>{Title}{block:SearchPage}, {lang:Search results for SearchQuery}{/block:SearchPage}{block:PostSummary}, {PostSummary}{/block:PostSummary}</title>
+    {block:Description}<meta name="description" content="{MetaDescription}" />{/block:Description}
+    <link rel="shortcut icon" href="{Favicon}" />
+    <link rel="apple-touch-icon" href="{PortraitURL-128}"/>
+    <link rel="alternate" type="application/rss+xml" href="{RSS}" />
+
+   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.min.js"></script>
+   <script type="text/javascript" src="http://vhx.tv/javascripts/jquery.swfobject-1.1.1.js"></script>
+
+   <script type="text/javascript">
+     
+     //
+     // Api docs: http://dev.vhx.tv/video-player.html
+     //
+     
+     $(document).ready(
+       function() {
+           
+         $(window).resize(redraw);
+         
+         $('#vhx_megaplaya').flash({
+           swf: 'http://vhx.tv/embed/megaplaya.swf',
+           width: '100%',
+           allowFullScreen: true,
+           allowScriptAccess: "always",
+           //wmode: 'transparent',
+           height: '100%'
+         });
+
+         $('#vhx_megaplaya').height($(window).height());
+       }
+     );
+
+     // Megaplaya calls this function when it's ready
+     var megaplaya = false;
+     function megaplaya_loaded()
+     {
+       megaplaya = $('#vhx_megaplaya').children()[0];
+
+       megaplaya_addListeners();
+
+       load_videos();
+       redraw();
+     }
+     
+     function redraw()
+     {
+         $('.bar').height($('#info').outerHeight() + 10);
+         $('#vhx_megaplaya').css('top', $('.bar').outerHeight());
+        $('#vhx_megaplaya').height($(window).height() - $('.bar').outerHeight());
+        $('#vhx_megaplaya').width($(window).width());
+     }
+
+     function megaplaya_call(method)
+     {
+       // "pause" => megaplaya.api_pause();
+       (megaplaya["api_" + method])();
+     }
+
+     function megaplaya_addListeners()
+     {
+       var events = ['onVideoFinish', 'onVideoLoad', 'onError', 'onPause', 'onPlay', 'onFullscreen', 'onPlaybarShow', 'onPlaybarHide', 'onKeyboardDown'];
+
+       // Loop through and add in call the callback methods. Flash will automatically call megaplaya_callback
+       $.each(events, function(index, value) {
+         megaplaya.api_addListener(value, "function() { megaplaya_callback('" + value + "', arguments); }")
+       });
+     }
+
+     function megaplaya_callback(event_name, args)
+     {
+       switch (event_name) {
+       
+        case 'onVideoLoad':
+            load_video_info();
+            break;
+       }
+     }
+
+     function load_videos()
+     {
+        var post_id = (/post\/([0-9]+)/).exec(location.href);
+        var url = "http://api.tumblr.com/v2/blog/cputv.tumblr.com/posts/video?api_key=zKa7HBvefLe0PcxMoojhQX4l0JcUSwa1sSAPGBvwh6VGVlxa3j&jsonp=load_videos_complete";
+        
+        if (post_id)
+            url += '&id=' + post_id[1];
+            
+       $.ajax({
+         type: "GET",
+         url: url,
+         dataType: "jsonp"
+        });
+     }
+
+     var videos = [];
+     function load_videos_complete(obj) {
+        
+        for (var i = 0; i < obj.response.posts.length; i++) {
+
+            videos.push({ 
+                url: obj.response.posts[i].permalink_url,
+                post: obj.response.posts[i]
+            });
+        }
+
+       megaplaya.api_playQueue(videos);
+    }
+    
+    function load_video_info()
+    {
+        var video = megaplaya.api_getCurrentVideo();
+       
+        var caption = video.post.caption.replace('<p>','').replace('</p>','');
+        // Todo: Use an html stripper
+        if (caption != "")
+            $('#video_caption')[0].innerHTML = caption;
+        else 
+            $('#video_caption')[0].innerHTML = "";
+        
+        $.ajax({
+         type: "GET",
+         url: "http://api.vhx.tv/videos/info.json?callback=test&url="+video.url,
+         dataType: "jsonp",
+         success: function(rsp) {
+            $('#info').show();
+            $('#video_title')[0].innerHTML = '<a href="' + video.post.post_url + '">' + rsp.video.title + '</a>';
+            $('#note_count')[0].innerHTML = video.post.note_count + ' notes';
+            redraw();
+         }
+        });
+        
+        $('iframe')[0].src = "http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fcputv.tumblr.com%2Fpost%2F" + video.post.id + "&name=cputv&pid=" + video.post.id + "&rk=" + video.post.reblog_key;
+        
+        redraw();
+        
+    }
+    
+   </script>
+   <style>
+   body,html { margin: 0; padding: 0; background: #000; overflow: hidden; }
+   .bar {
+      padding: 5px;
+      text-align: center;
+      position: relative;
+      background: {Color:Background}; /* Old browsers */
+background: {Color:Background}; /* Old browsers */
+background: -moz-linear-gradient(top,  {Color:Background} 0%, {Color:Background Fade} 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,{Color:Background}), color-stop(100%,{Color:Background Fade})); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* IE10+ */
+background: linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='{Color:Background}', endColorstr='{Color:Background Fade}',GradientType=0 ); /* IE6-9 */
+
+     min-height: 50px; 
+    }
+
+    .bar .name { text-align: center; }
+    .bar .name a {  font: bold 34px Helvetica, Arial; letter-spacing: -4px; color: {color:Title}; text-shadow:0px 0px 20px rgba(255, 255, 255, .3); -webkit-text-shadow: 0px 0px 20px rgba(255, 255, 255, .3); text-decoration: none; }
+    .bar #info { position: absolute; left: 20px; top: 10px;}
+    .bar #info .title { text-align: left; color: {Color:Text Alt}; font: normal 12px Helvetica, Arial; }
+    .bar #info .title #video_title a { font-weight: bold; color: {color:Title};  text-decoration: none; }
+    .bar #info .title #note_count { margin-left: 10px; font-style: italic; }
+    .bar #info #video_caption { color: {Color:Text}; padding: 0; margin: 0;  padding: 0; margin: 0; text-align: left; color: {Color:Text}; font: normal 16px Helvetica, Arial; font-style: italic; max-width: 320px; }
+    #vhx_megaplaya { position: absolute; z-index: 2;  }
+
+   </style>
+</head>
+<body>
+   <div class="bar">
+    <div id="info" style="display:none">
+     <div id="video_caption"></div>
+          <div class="title">You're watching <span id="video_title">Emotional landscapes</span><span id="note_count"></span></div>
+    </div>
+    <div class="name"><a href="http://cputv.tumblr.com">{Title}</a></div>
+   </div>
+
+   <div id="vhx_megaplaya">Loading...</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
