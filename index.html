@@ -24,16 +24,7 @@ Video player and metadata powered by http://VHX.tv
     <meta name="color:Text" content="#ffffff" />
     <meta name="color:Text Alt" content="#aaaaaa" />
 
-    <meta name="font:Title" content="Arial" />
-    <meta name="font:Body" content="Arial" />
-    <meta name="font:Accent" content="Lucida Sans" />
-
     <meta name="if:Shuffle videos" content="0" />
-
-    <meta name="text:Disqus Shortname" content="" />
-
-    <meta name="image:Header" content="" />
-    <meta name="image:Background" content="" />
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>{Title}{block:SearchPage}, {lang:Search results for SearchQuery}{/block:SearchPage}{block:PostSummary}, {PostSummary}{/block:PostSummary}</title>
@@ -42,19 +33,17 @@ Video player and metadata powered by http://VHX.tv
     <link rel="apple-touch-icon" href="{PortraitURL-128}"/>
     <link rel="alternate" type="application/rss+xml" href="{RSS}" />
 
-   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.min.js"></script>
-   <script type="text/javascript" src="http://vhx.tv/javascripts/jquery.swfobject-1.1.1.js"></script>
+   <script type="text/javascript" src="http://static.tumblr.com/genyhlk/IJ4luevo0/jquery.min.js"></script>
+   <script type="text/javascript" src="http://static.tumblr.com/genyhlk/77tluevoh/jquery.swfobject-1.1.1.js"></script>
 
    <script type="text/javascript">
 
      //
      // Api docs: http://dev.vhx.tv/video-player.html
      //
-     var username;
+     var username = "{Name}";
      $(document).ready(
        function() {
-         username = (/([a-zA-Z0-9_-]+)\.tumblr/).exec(location.href);
-
          $(window).resize(redraw);
 
          $('#vhx_megaplaya').flash({
@@ -120,7 +109,7 @@ Video player and metadata powered by http://VHX.tv
      {
 
         var post_id = (/post\/([0-9]+)/).exec(location.href);
-        var url = "http://api.tumblr.com/v2/blog/" + username[1] + ".tumblr.com/posts/video?api_key=zKa7HBvefLe0PcxMoojhQX4l0JcUSwa1sSAPGBvwh6VGVlxa3j&jsonp=load_videos_complete";
+        var url = "http://api.tumblr.com/v2/blog/" + username + ".tumblr.com/posts/video?api_key=zKa7HBvefLe0PcxMoojhQX4l0JcUSwa1sSAPGBvwh6VGVlxa3j&jsonp=load_videos_complete";
 
         if (post_id)
             url += '&id=' + post_id[1];
@@ -134,7 +123,6 @@ Video player and metadata powered by http://VHX.tv
 
      var videos = [];
      function load_videos_complete(obj) {
-
         {block:IfShuffleVideos}
             obj.response.posts = shuffle(obj.response.posts)
         {/block:IfShuffleVideos}
@@ -200,15 +188,14 @@ Video player and metadata powered by http://VHX.tv
       text-align: center;
       position: relative;
       background: {Color:Background}; /* Old browsers */
-background: {Color:Background}; /* Old browsers */
-background: -moz-linear-gradient(top,  {Color:Background} 0%, {Color:Background Fade} 100%); /* FF3.6+ */
-background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,{Color:Background}), color-stop(100%,{Color:Background Fade})); /* Chrome,Safari4+ */
-background: -webkit-linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* Chrome10+,Safari5.1+ */
-background: -o-linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* Opera 11.10+ */
-background: -ms-linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* IE10+ */
-background: linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* W3C */
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='{Color:Background}', endColorstr='{Color:Background Fade}',GradientType=0 ); /* IE6-9 */
-
+      background: {Color:Background}; /* Old browsers */
+      background: -moz-linear-gradient(top,  {Color:Background} 0%, {Color:Background Fade} 100%); /* FF3.6+ */
+      background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,{Color:Background}), color-stop(100%,{Color:Background Fade})); /* Chrome,Safari4+ */
+      background: -webkit-linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* Chrome10+,Safari5.1+ */
+      background: -o-linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* Opera 11.10+ */
+      background: -ms-linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* IE10+ */
+      background: linear-gradient(top,  {Color:Background} 0%,{Color:Background Fade} 100%); /* W3C */
+      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='{Color:Background}', endColorstr='{Color:Background Fade}',GradientType=0 ); /* IE6-9 */
      min-height: 50px;
     }
 
@@ -219,27 +206,20 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='{Color:Backgr
     .bar #info .title #video_title a { font-weight: bold; color: {color:Title};  text-decoration: none; }
     .bar #info .title #note_count { margin-left: 10px; font-style: italic; }
     .bar #info #video_caption { color: {Color:Text}; padding: 0; margin: 0;  padding: 0; margin: 0; text-align: left; color: {Color:Text}; font: normal 16px Helvetica, Arial; font-style: italic; max-width: 320px; }
+    .bar #info #video_caption a { color: {Color:Title}; text-decoration: none; }
     #vhx_megaplaya { position: absolute; z-index: 2;  }
 
    </style>
 </head>
 <body>
    <div class="bar">
-    <div id="info" style="display:none">
-     <div id="video_caption"></div>
-          <div class="title">You're watching <span id="video_title">Emotional landscapes</span><span id="note_count"></span></div>
-    </div>
-    <div class="name"><a href="/">{Title}</a></div>
+      <div id="info" style="display:none">
+        <div id="video_caption"></div>
+        <div class="title">You're watching <span id="video_title">Emotional landscapes</span><span id="note_count"></span></div>
+      </div>
+      <div class="name"><a href="/">{Title}</a></div>
    </div>
 
    <div id="vhx_megaplaya">Loading...</div>
-
 </body>
 </html>
-
-
-
-
-
-
-
