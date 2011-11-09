@@ -28,10 +28,7 @@ Video player and metadata powered by http://VHX.tv
     <meta name="font:Body" content="Arial" />
     <meta name="font:Accent" content="Lucida Sans" />
 
-    <meta name="if:Show People I Follow" content="1" />
-    <meta name="if:Show Tags" content="1" />
-    <meta name="if:Show Album Art on Audio Posts" content="1" />
-    <meta name="if:Enable Jump Pagination" content="0" />
+    <meta name="if:Shuffle videos" content="0" />
 
     <meta name="text:Disqus Shortname" content="" />
 
@@ -53,10 +50,10 @@ Video player and metadata powered by http://VHX.tv
      //
      // Api docs: http://dev.vhx.tv/video-player.html
      //
-		 var username;
+     var username;
      $(document).ready(
        function() {
-				 username = (/([a-zA-Z0-9_-]+)\.tumblr/).exec(location.href);
+         username = (/([a-zA-Z0-9_-]+)\.tumblr/).exec(location.href);
 
          $(window).resize(redraw);
 
@@ -121,7 +118,7 @@ Video player and metadata powered by http://VHX.tv
 
      function load_videos()
      {
-				
+
         var post_id = (/post\/([0-9]+)/).exec(location.href);
         var url = "http://api.tumblr.com/v2/blog/" + username[1] + ".tumblr.com/posts/video?api_key=zKa7HBvefLe0PcxMoojhQX4l0JcUSwa1sSAPGBvwh6VGVlxa3j&jsonp=load_videos_complete";
 
@@ -137,6 +134,10 @@ Video player and metadata powered by http://VHX.tv
 
      var videos = [];
      function load_videos_complete(obj) {
+
+        {block:IfShuffleVideos}
+            obj.response.posts = shuffle(obj.response.posts)
+        {/block:IfShuffleVideos}
 
         for (var i = 0; i < obj.response.posts.length; i++) {
 
@@ -171,11 +172,24 @@ Video player and metadata powered by http://VHX.tv
             redraw();
          }
         });
-				
+
         $('iframe')[0].src = "http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2F" + username + ".tumblr.com%2Fpost%2F" + video.post.id + "&name=" + username + "&pid=" + video.post.id + "&rk=" + video.post.reblog_key;
 
         redraw();
 
+    }
+
+    function shuffle(array) {
+        var tmp, current, top = array.length;
+
+        if(top) while(--top) {
+            current = Math.floor(Math.random() * (top + 1));
+            tmp = array[current];
+            array[current] = array[top];
+            array[top] = tmp;
+        }
+
+        return array;
     }
 
    </script>
