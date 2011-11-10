@@ -25,6 +25,7 @@ Video player and metadata powered by http://VHX.tv
     <meta name="color:Text Alt" content="#aaaaaa" />
 
     <meta name="if:Shuffle videos" content="0" />
+    <meta name="if:Show credits" content="1" />
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>{Title}{block:SearchPage}, {lang:Search results for SearchQuery}{/block:SearchPage}{block:PostSummary}, {PostSummary}{/block:PostSummary}</title>
@@ -107,9 +108,8 @@ Video player and metadata powered by http://VHX.tv
 
      function load_videos()
      {
-
         var post_id = (/post\/([0-9]+)/).exec(location.href);
-        var url = "http://api.tumblr.com/v2/blog/" + username + ".tumblr.com/posts/video?api_key=zKa7HBvefLe0PcxMoojhQX4l0JcUSwa1sSAPGBvwh6VGVlxa3j&jsonp=load_videos_complete";
+        var url = "http://api.tumblr.com/v2/blog/" + username + ".tumblr.com/posts/video?api_key=zKa7HBvefLe0PcxMoojhQX4l0JcUSwa1sSAPGBvwh6VGVlxa3j&jsonp=load_videos_complete&limit=50";
 
         if (post_id)
             url += '&id=' + post_id[1];
@@ -156,7 +156,13 @@ Video player and metadata powered by http://VHX.tv
          success: function(rsp) {
             $('#info').show();
             $('#video_title')[0].innerHTML = '<a href="' + video.post.post_url + '">' + rsp.video.title + '</a>';
-            $('#note_count')[0].innerHTML = video.post.note_count + ' notes';
+
+            if (video.post.note_count > 0) {
+              $('#note_count')[0].innerHTML = video.post.note_count + ' notes';
+            }
+            else {
+              $('#note_count')[0].innerHTML = '';
+            }
             redraw();
          }
         });
@@ -209,6 +215,10 @@ Video player and metadata powered by http://VHX.tv
     .bar #info #video_caption a { color: {Color:Title}; text-decoration: none; }
     #vhx_megaplaya { position: absolute; z-index: 2;  }
 
+    .bar .right { position: absolute; right: 5px; top: 28px; }
+    .bar .right a { color: {color:Title}; font: normal 12px Helvetica, Arial; background: #000; padding: 3px 5px; -webkit-border-radius: 3px; -moz-border-radius: 3px; border-radius: 3px; text-decoration: none; }
+
+    /**/
    </style>
 </head>
 <body>
@@ -218,6 +228,12 @@ Video player and metadata powered by http://VHX.tv
         <div class="title">You're watching <span id="video_title">Emotional landscapes</span><span id="note_count"></span></div>
       </div>
       <div class="name"><a href="/">{Title}</a></div>
+
+      {block:IfShowCredits}
+        <div class="right">
+          <a href="http://blog.vhx.tv/post/12562051017/hey-tumblr-users-do-you-run-a-video-only-blog-we" target="_blank">Theme by <b>VHX</b></a>
+        </div>
+      {/block:IfShowCredits}
    </div>
 
    <div id="vhx_megaplaya">Loading...</div>
