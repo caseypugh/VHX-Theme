@@ -42,10 +42,14 @@ Video player and metadata powered by http://VHX.tv
      //
      // Api docs: http://dev.vhx.tv/video-player.html
      //
+     var color = "{color:Title}";
+     color = color.substr(1);
+
      var username = "{Name}";
      $(document).ready(
        function() {
          $(window).resize(redraw);
+
 
          $('#vhx_megaplaya').flash({
            swf: 'http://vhx.tv/embed/megaplaya.swf',
@@ -65,7 +69,7 @@ Video player and metadata powered by http://VHX.tv
      function megaplaya_loaded()
      {
        megaplaya = $('#vhx_megaplaya').children()[0];
-
+       megaplaya.api_setColor(color);
        megaplaya_addListeners();
 
        load_videos();
