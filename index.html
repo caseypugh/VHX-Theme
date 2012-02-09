@@ -20,11 +20,14 @@ Video player and metadata powered by http://VHX.tv
     <!-- DEFAULT VARIABLES -->
     <meta name="color:Background" content="#333333" />
     <meta name="color:Background Fade" content="#111111" />
+    <meta name="color:Video player" content="#2ef4ed" />
     <meta name="color:Title" content="#2ef4ed" />
     <meta name="color:Text" content="#ffffff" />
     <meta name="color:Text Alt" content="#aaaaaa" />
 
     <meta name="if:Shuffle videos" content="0" />
+    <!-- Hiding letterbox is experimental and only works for 16:9 videos -->
+    <meta name="if:Hide video letterbox" content="0" />
     <meta name="if:Show credits" content="1" />
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -42,8 +45,10 @@ Video player and metadata powered by http://VHX.tv
      //
      // Api docs: http://dev.vhx.tv/video-player.html
      //
-     var color = "{color:Title}";
+     var color = "{color:Video player}";
      color = color.substr(1);
+     var is_mobile = navigator.userAgent.match(/iPad|iPhone|iPod|Android/i) != null;
+     var cur_page = 0;
 
      var username = "{Name}";
      $(document).ready(
@@ -51,15 +56,19 @@ Video player and metadata powered by http://VHX.tv
          $(window).resize(redraw);
 
 
-         $('#vhx_megaplaya').flash({
-           swf: 'http://vhx.tv/embed/megaplaya.swf',
-           width: '100%',
-           allowFullScreen: true,
-           allowScriptAccess: "always",
-           //wmode: 'transparent',
-           height: '100%'
-         });
-
+         if (!is_mobile) {
+           $('#vhx_megaplaya').flash({
+             swf: 'http://vhx.tv/embed/megaplaya.swf',
+             width: '100%',
+             allowFullScreen: true,
+             allowScriptAccess: "always",
+             wmode: 'transparent',
+             height: '100%'
+           });
+          }
+          else {
+            load_videos();
+          }
          $('#vhx_megaplaya').height($(window).height());
        }
      );
@@ -69,6 +78,11 @@ Video player and metadata powered by http://VHX.tv
      function megaplaya_loaded()
      {
        megaplaya = $('#vhx_megaplaya').children()[0];
+
+       {block:IfHideVideoLetterbox}
+           megaplaya.api_disableLetterbox(1280, 720);
+       {/block:IfHideVideoLetterbox}
+
        megaplaya.api_setColor(color);
        megaplaya_addListeners();
 
@@ -78,10 +92,12 @@ Video player and metadata powered by http://VHX.tv
 
      function redraw()
      {
-         $('.bar').height($('#info').outerHeight() + 10);
-         $('#vhx_megaplaya').css('top', $('.bar').outerHeight());
+        $('#info').width($(window).width() / 2 - 100);
+        $('.bar').height($('#info').outerHeight() + 10);
+        $('#vhx_megaplaya').css('top', $('.bar').outerHeight());
         $('#vhx_megaplaya').height($(window).height() - $('.bar').outerHeight());
         $('#vhx_megaplaya').width($(window).width());
+
      }
 
      function megaplaya_call(method)
@@ -106,14 +122,25 @@ Video player and metadata powered by http://VHX.tv
 
         case 'onVideoLoad':
             load_video_info();
+
+            // Load in more videos plz
+            if (megaplaya.api_getCurrentVideoIndex() > megaplaya.api_getQueue().length - 2) {
+              cur_page++;
+              load_videos(cur_page);
+            }
             break;
        }
      }
 
-     function load_videos()
+     function load_videos(page)
      {
+        if (!page) {
+          page = 0;
+        }
+
+        var posts_per_page = 20;
         var post_id = (/post\/([0-9]+)/).exec(location.href);
-        var url = "http://api.tumblr.com/v2/blog/" + username + ".tumblr.com/posts/video?api_key=zKa7HBvefLe0PcxMoojhQX4l0JcUSwa1sSAPGBvwh6VGVlxa3j&jsonp=load_videos_complete&limit=50";
+        var url = "http://api.tumblr.com/v2/blog/" + username + ".tumblr.com/posts/video?api_key=zKa7HBvefLe0PcxMoojhQX4l0JcUSwa1sSAPGBvwh6VGVlxa3j&jsonp=load_videos_complete&limit=" + posts_per_page + "&offset=" + (page * posts_per_page);
 
         if (post_id)
             url += '&id=' + post_id[1];
@@ -127,26 +154,60 @@ Video player and metadata powered by http://VHX.tv
 
      var videos = [];
      function load_videos_complete(obj) {
-        {block:IfShuffleVideos}
-            obj.response.posts = shuffle(obj.response.posts)
-        {/block:IfShuffleVideos}
+       // For previewing the tumblr theme, load in some filler videos
+       if (username == "demo") {
+         obj.response.posts = [
+           { permalink_url: 'http://vimeo.com/6045312', caption: 'Gorgeous visualization' },
+           { permalink_url: 'http://www.youtube.com/watch?v=6yVhTyPaaLQ', caption: 'No paint brushes required.' },
+           { permalink_url: 'http://vimeo.com/26906724' }
+         ];
+       }
 
-        for (var i = 0; i < obj.response.posts.length; i++) {
+       {block:IfShuffleVideos}
+           obj.response.posts = shuffle(obj.response.posts)
+       {/block:IfShuffleVideos}
 
-            videos.push({
-                url: obj.response.posts[i].permalink_url,
-                post: obj.response.posts[i]
-            });
+      var append_videos = videos.length > 0;
+
+       for (var i = 0; i < obj.response.posts.length; i++) {
+         videos.push({
+           url: obj.response.posts[i].permalink_url,
+           post: obj.response.posts[i]
+         });
+       }
+
+      if (!is_mobile) {
+        if (append_videos) {
+          var index = megaplaya.api_getCurrentVideoIndex();
+          megaplaya.api_loadQueue(videos);
+          megaplaya.api_setQueueAt(index);
         }
+        else {
+          megaplaya.api_playQueue(videos);
+        }
+      }
+      else {
+         var video_urls = [];
+         for (i = 0; i < videos.length; i++)
+           video_urls.push(videos[i].url);
 
-       megaplaya.api_playQueue(videos);
+         //console.log(video_urls, '<iframe src="http://vhx.tv/embed/megaplaya.html?videos=' + video_urls.join(',') + '" allowfullscreen frameborder="0" height="100%" width="100%" />');
+         load_video_info(videos[0]);
+         $('#vhx_megaplaya')[0].innerHTML = '<iframe src="http://vhx.tv/embed/megaplaya.html?videos=' + video_urls.join(',') + '" allowfullscreen frameborder="0" height="100%" width="100%" />';
+         load_video_info()
+       }
     }
 
-    function load_video_info()
+    function load_video_info(vid)
     {
-        var video = megaplaya.api_getCurrentVideo();
+        var video = vid;
+        $("#info").hide();
+
+        if (!video && megaplaya)
+          video = megaplaya.api_getCurrentVideo();
 
         var caption = video.post.caption.replace('<p>','').replace('</p>','');
+
         // Todo: Use an html stripper
         if (caption != "")
             $('#video_caption')[0].innerHTML = caption;
@@ -158,7 +219,7 @@ Video player and metadata powered by http://VHX.tv
          url: "http://api.vhx.tv/videos/info.json?callback=test&url="+video.url,
          dataType: "jsonp",
          success: function(rsp) {
-            $('#info').show();
+            $('#info').fadeIn(300);
             $('#video_title')[0].innerHTML = '<a href="' + video.post.post_url + '">' + rsp.video.title + '</a>';
 
             if (video.post.note_count > 0) {
@@ -171,7 +232,9 @@ Video player and metadata powered by http://VHX.tv
          }
         });
 
-        $('iframe')[0].src = "http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2F" + username + ".tumblr.com%2Fpost%2F" + video.post.id + "&name=" + username + "&pid=" + video.post.id + "&rk=" + video.post.reblog_key;
+        try {
+          $('iframe')[0].src = "http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2F" + username + ".tumblr.com%2Fpost%2F" + video.post.id + "&name=" + username + "&pid=" + video.post.id + "&rk=" + video.post.reblog_key;
+        } catch(e) { }
 
         redraw();
 
